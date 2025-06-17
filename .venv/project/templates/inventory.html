@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+{% block title %}Материально-производственные запасы{% endblock %}
+
+{% block content %}
+<h2>Материально-производственные запасы</h2>
+
+{% if grouped_items %}
+  <form method="POST" action="{{ url_for('calculate_reserve_route') }}" class="mb-4" style="max-width: 500px; margin: 0 auto;">
+    <div class="mb-3">
+      <label for="doc_select" class="form-label">Выберите документ для расчёта:</label>
+      <select name="upload_time" id="doc_select" class="form-select" required>
+        <option value="all">Все документы</option>
+        {% for upload_time in grouped_items.keys() %}
+          <option value="{{ upload_time }}">{{ upload_time }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="method" class="form-label">Выберите метод расчёта:</label>
+      <select name="method" id="method" class="form-select" required>
+        <option value="standard">Стандартный</option>
+        <option value="market">Рыночный</option>
+        <option value="shelf_life">По сроку хранения</option>
+        <option value="conservative">Консервативный</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">Рассчитать</button>
+  </form>
+
+  <div class="accordion" id="documentsAccordion">
+    {% for upload_time, items in grouped_items.items() %}
+    <div class="accordion-item" id="group-{{ loop.index }}">
+      <h2 class="accordion-header d-flex justify-content-between align-items-center" id="heading{{ loop.index }}">
+        <button class="accordion-button collapsed flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
+          {{ loop.index }}. Документ от {{ upload_time }} ({{ items|length }} позиций)
+        </button>
+        <button class="btn btn-danger btn-sm ms-2 delete-group-btn" data-upload-time="{{ upload_time }}" title="Удалить этот документ">
+          Удалить
+        </button>
+      </h2>
+      <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#documentsAccordion">
+        <div class="accordion-body p-0">
+          <table class="table table-striped mb-0">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Наименование</th>
+                <th>Категория</th>
+                <th>Количество</th>
+                <th>Цена</th>
+                <th>Срок хранения (мес.)</th>
+                <th>Дата поступления</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in items %}
+              <tr>
+                <td>{{ item.id }}</td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.category }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ "%.2f"|format(item.price) }}</td>
+                <td>{{ item.shelf_life_months }}</td>
+                <td>{{ item.received_date }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p>Данные о МПЗ отсутствуют. Загрузите данные через форму загрузки.</p>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.delete-group-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const uploadTime = button.dataset.uploadTime;
+      if (!confirm(`Удалить все записи для документа от ${uploadTime}?`)) return;
+
+      fetch('/delete_by_upload_time', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ upload_time: uploadTime })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert('Ошибка: ' + data.error);
+        } else {
+          alert(data.message);
+          // Удаляем весь блок группы из DOM
+          const groupDiv = button.closest('.accordion-item');
+          if (groupDiv) groupDiv.remove();
+        }
+      })
+      .catch(err => {
+        alert('Ошибка сети или сервера');
+        console.error(err);
+      });
+    });
+  });
+});
+</script>
+
+{% endblock %}

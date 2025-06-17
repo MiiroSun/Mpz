@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block title %}Загрузка данных{% endblock %}
+{% block content %}
+<h2>Загрузить файл с МПЗ</h2>
+
+<form method="POST" enctype="multipart/form-data">
+  <div class="mb-3">
+    <label for="file" class="form-label">Выберите файл (.xlsx, .xls, .csv):</label>
+    <input type="file" name="file" id="file" required accept=".xlsx,.xls,.csv" class="form-control" />
+  </div>
+
+  <button type="submit" class="btn btn-primary">Загрузить</button>
+</form>
+{% endblock %}

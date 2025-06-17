@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+{% block title %}Результаты расчёта резервов{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Результаты расчёта резервов МПЗ</h2>
+
+{% if reserves %}
+  <div class="mb-3 d-flex justify-content-between align-items-center">
+    <p class="mb-0">Всего записей: <strong>{{ reserves|length }}</strong></p>
+    <div>
+      <a href="{{ url_for('export_reserves_excel') }}" class="btn btn-success btn-sm">📥 Скачать Excel</a>
+    </div>
+  </div>
+
+  <div class="accordion" id="reservesAccordion">
+    {% set grouped_reserves = reserves|groupby('calculation_date') %}
+    {% for date_group in grouped_reserves %}
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="heading{{ loop.index }}">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse{{ loop.index }}" aria-expanded="false"
+                aria-controls="collapse{{ loop.index }}">
+          Расчёт от {{ date_group.grouper }} ({{ date_group.list|length }} позиций)
+        </button>
+      </h2>
+      <div id="collapse{{ loop.index }}" class="accordion-collapse collapse"
+           aria-labelledby="heading{{ loop.index }}" data-bs-parent="#reservesAccordion">
+        <div class="accordion-body p-0">
+          <table class="table table-striped mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>№</th>
+                <th>Наименование</th>
+                <th>Метод расчёта</th>
+                <th>Рассчитанный резерв</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in date_group.list %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ r.name or '—' }}</td>
+                <td>{{ r.method_used }}</td>
+                <td>{{ "%.2f"|format(r.calculated_reserve) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="alert alert-info text-center">Результаты расчёта отсутствуют. Выполните расчёт.</div>
+{% endif %}
+{% endblock %}

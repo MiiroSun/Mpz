@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block title %}Главная{% endblock %}
+{% block content %}
+<div class="card mb-4">
+  <div class="card-body">
+    <h1 class="card-title h2">Добро пожаловать в программного робота-бухгалтера</h1>
+    <p class="card-text">Используйте меню для загрузки данных, просмотра МПЗ, расчета резервов и анализа бухгалтерских проводок.</p>
+    <a href="/upload" class="btn btn-primary">Загрузить данные</a>
+    <a href="/calculate" class="btn btn-secondary">Рассчитать резервы</a>
+  </div>
+</div>
+{% endblock %}
